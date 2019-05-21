@@ -2,12 +2,6 @@
 #include <cstddef>
 #include <memory>
 
-/// FWD decl
-namespace cl
-{
-  class Program;
-}
-
 
 /// \param buffer The RGBA24 image buffer
 /// \param width Image width

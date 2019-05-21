@@ -1,8 +1,5 @@
 #include "render.hpp"
 
-#define CL_HPP_TARGET_OPENCL_VERSION 120
-#include <CL/cl.hpp>
-#include <spdlog/spdlog.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -139,57 +136,13 @@ void render_cpu(std::byte* buffer,
 
 struct GPURenderer::data_t
 {
-  std::vector<cl::Device> devices;
-  cl::Program program;
-  cl::Context ctx;
+  int test;
 };
 
 
 GPURenderer::GPURenderer()
 {
-  m_data = std::make_unique<data_t>();
-  spdlog::info("OpenCL - Initialization");
-
-
-  std::vector<cl::Platform> platforms;
-  cl::Platform::get(&platforms);
-  if (platforms.size() == 0)
-  {
-    spdlog::error("OpenCL - No platform detected");
-    std::abort();
-  }
-
-  cl::Platform default_platform = platforms[0];
-  spdlog::info("Using default platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
-
-
-  cl_context_properties properties[] = {
-      CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[0])(), 0};
-  m_data->ctx = cl::Context(CL_DEVICE_TYPE_DEFAULT, properties);
-  m_data->devices = m_data->ctx.getInfo<CL_CONTEXT_DEVICES>();
-
-  // Read Sources
-  std::string src;
-  {
-    std::ifstream t(kKernelFilename);
-    if (!t.good())
-    {
-      spdlog::error("Unable to load the Kernel file: {}", kKernelFilename);
-      std::abort();
-    }
-    std::stringstream buffer;
-    buffer << t.rdbuf();
-    src = buffer.str();
-  }
-
-
-  m_data->program = cl::Program(m_data->ctx, src);
-  if (m_data->program.build(m_data->devices) != CL_SUCCESS)
-  {
-    spdlog::error("OpenCL - Error building kernel: {}",  m_data->program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_data->devices[0]));
-    std::abort();
-  }
-  spdlog::info("OpenCL - Kernel Loaded. ALL GOOD!");
+    std::cout << "creating object" << std::endl;
 }
 
 GPURenderer::~GPURenderer()
@@ -206,36 +159,5 @@ GPURenderer::execute(std::byte* buffer,
                      std::ptrdiff_t stride,
                      int n_iterations)
 {
-  // Create a device global memory
-  cl::Buffer buf(m_data->ctx, CL_MEM_READ_WRITE, height * width * kRGBASize);
-  cl::CommandQueue queue(m_data->ctx, m_data->devices[0]);
-
-  // Iteration computation
-  {
-    // Get the kernel
-    cl::Kernel ker(m_data->program, "demo");
-
-    // Set args
-    ker.setArg(0, buf);
-
-    queue.enqueueNDRangeKernel(
-      ker,
-      cl::NullRange,              // offset
-      cl::NDRange(height, width), // Global size
-      cl::NullRange);             // Local size
-  }
-
-  // Copy back the data
-  if (stride == width * kRGBASize)
-  {
-    queue.enqueueReadBuffer(buf, CL_TRUE, 0, width * height * kRGBASize, buffer);
-  }
-  else
-  {
-    // handle this case correctly
-    std::abort();
-  }
-
-  //std::byte* a = buffer;
-  //std::cout << (int)a[0] << ' ' << (int)a[1] << ' ' << (int)a[2] << ' ' << (int)a[3] << "\n";
+    return;
 }

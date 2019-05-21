@@ -39,7 +39,7 @@ endif()
 
 
 find_package(PNG REQUIRED)
-find_package(OpenCL REQUIRED)
+#find_package(OpenCL REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-W -Wall")
@@ -50,7 +50,7 @@ include_directories(lib/include)
 
 # add_library(renderer src/render.hpp src/render_solution.cpp)  # version prof
 add_library(renderer src/render.hpp src/render.cpp)  # version etudiant
-target_link_libraries(renderer OpenCL::OpenCL spdlog::spdlog)
+target_link_libraries(renderer)
 #target_compile_definitions(renderer PRIVATE KERNEL_SOURCE_FILE=${CMAKE_SOURCE_DIR}/src/mandel_solution.cl)  # version prof
 target_compile_definitions(renderer PRIVATE KERNEL_SOURCE_FILE=${CMAKE_SOURCE_DIR}/src/mandel_etu.cl)  # version etudiant
 

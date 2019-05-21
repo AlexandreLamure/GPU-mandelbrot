@@ -25,7 +25,6 @@ void write_png(const std::byte* buffer,
     png_destroy_write_struct(&png_ptr, nullptr);
     return;
   }
-
   FILE* fp = fopen(filename, "wb");
   png_init_io(png_ptr, fp);
 
@@ -44,7 +43,6 @@ void write_png(const std::byte* buffer,
     png_write_row(png_ptr, reinterpret_cast<png_const_bytep>(buffer));
     buffer += stride;
   }
-
   png_write_end(png_ptr, info_ptr);
   png_destroy_write_struct(&png_ptr, nullptr);
   fclose(fp);
@@ -89,5 +87,6 @@ int main(int argc, char** argv)
 
   // Save
   write_png(buffer.get(), width, height, stride, filename.c_str());
+  return 0;
 }
 
