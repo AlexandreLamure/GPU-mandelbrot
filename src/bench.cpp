@@ -1,4 +1,5 @@
-#include "render.hpp"
+#include "render_cpu.hpp"
+#include "render_gpu.hpp"
 #include <vector>
 #include <benchmark/benchmark.h>
 
