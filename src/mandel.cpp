@@ -4,7 +4,7 @@
 #include <png.h>
 
 #include <CLI/CLI.hpp>
-#include "render.hpp"
+#include "render_cpu.hpp"
 
 
 void write_png(const std::byte* buffer,
@@ -81,8 +81,7 @@ int main(int argc, char** argv)
   }
   else if (mode == "GPU")
   {
-    GPURenderer rd;
-    rd.execute(buffer.get(), width, height, stride);
+    return 0;
   }
 
   // Save

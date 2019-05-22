@@ -1,18 +1,9 @@
-#include "render.hpp"
+#include "render_cpu.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cassert>
-
-#if defined(__GNUC__)
-#define QUOTE(name) #name
-#else
-#define QUOTE(name) name
-#endif
-
-#define STR(macro) QUOTE(macro)
-static constexpr const char* kKernelFilename = STR(KERNEL_SOURCE_FILE);
 
 
 struct rgba8_t {
@@ -131,33 +122,4 @@ void render_cpu(std::byte* buffer,
 
   delete[] iter_matrix;
   delete[] histogram;
-}
-
-
-struct GPURenderer::data_t
-{
-  int test;
-};
-
-
-GPURenderer::GPURenderer()
-{
-    std::cout << "creating object" << std::endl;
-}
-
-GPURenderer::~GPURenderer()
-{
-}
-
-constexpr int kRGBASize = 4;
-
-
-void
-GPURenderer::execute(std::byte* buffer,
-                     int width,
-                     int height,
-                     std::ptrdiff_t stride,
-                     int n_iterations)
-{
-    return;
 }
