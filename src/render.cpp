@@ -72,7 +72,7 @@ void render_cpu(std::byte* buffer,
     x0[i] = ((3.5 / ((float)width - 1.0)) * (float)i) - 2.5; //x0 = scaled x coordinate of pixel (scaled to lie in the Mandelbrot X scale (-2.5, 1))
 
   float total = 0.0;
-  for (int Py = 0; Py < height; ++Py)
+  for (int Py = 0; Py < height / 2; ++Py)
   {
     for (int Px = 0; Px < width; ++Px)
     {
@@ -131,6 +131,9 @@ void render_cpu(std::byte* buffer,
 
   delete[] iter_matrix;
   delete[] histogram;
+  delete[] y0;
+  delete[] x0;
+  delete[] hue;
 }
 
 
