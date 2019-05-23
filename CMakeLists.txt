@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10)
-project (GPGPU)
+project (GPGPU LANGUAGES CUDA CXX)
 
 include(FetchContent)
 
@@ -45,18 +45,21 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-W -Wall -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -s")
 
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++17" )
+set(CUDACXX "nvcc")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++17 -O3" )
+include_directories(${CUDA_INCLUDE_DIRS})
 
 
 include_directories(lib/include)
 
-add_library(renderer src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cu)  # version etudiant
+add_library(renderer src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cu)
 set_target_properties(renderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(renderer)
-target_compile_definitions(renderer PRIVATE KERNEL_SOURCE_FILE=${CMAKE_SOURCE_DIR}/src/mandel_etu.cl)  # version etudiant
 
 add_executable(mandel src/mandel.cpp)
+set_target_properties(mandel PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(mandel renderer PNG::PNG CLI11::CLI11)
 
 add_executable(bench src/bench.cpp)
+set_target_properties(bench PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(bench renderer benchmark)
