@@ -5,7 +5,7 @@
 
 #include <CLI/CLI.hpp>
 #include "render_cpu.hpp"
-
+#include "render_gpu.hpp"
 
 void write_png(const uint8_t* buffer,
                int width,
@@ -81,7 +81,8 @@ int main(int argc, char** argv)
   }
   else if (mode == "GPU")
   {
-    return 0;
+    GPURenderer r;
+    r.render_gpu(buffer.get(), width, height, stride);
   }
 
   // Save
