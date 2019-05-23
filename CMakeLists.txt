@@ -52,7 +52,7 @@ include_directories(${CUDA_INCLUDE_DIRS})
 
 include_directories(lib/include)
 
-add_library(renderer src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cu)
+add_library(renderer src/heat_lut.hpp src/heat_lut.cpp src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cu)
 set_target_properties(renderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(renderer)
 
