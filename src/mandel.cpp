@@ -57,8 +57,8 @@ int main(int argc, char** argv)
 
   std::string filename = "output.png";
   std::string mode = "GPU";
-  int width = 4800;
-  int height = 3200;
+  int width = 1200;
+  int height = 800;
 
   CLI::App app{"mandel"};
   app.add_option("-o", filename, "Output image");

@@ -9,9 +9,14 @@
 __global__
 void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
 {
-    const unsigned int offset = blockIdx.x*blockDim.x + threadIdx.x;
-    int X = offset % width;
-    int Y = (offset-X)/width;
+    int X = blockIdx.y * blockDim.y + threadIdx.y;
+    int Y = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (Y >= width or Y >= height)
+      return;
+
+    if (X >= width or X >= height)
+      return;
 
     int idx = width * Y + X;
 
@@ -69,11 +74,10 @@ void GPURenderer::render_gpu(uint8_t* buffer,
     cudaMalloc(&iter_matrix_cu, N*sizeof(int));
 
     float total = 0.f;
+    dim3 nb_blocks(ceil(float(height)/128),(float(width)/1),1);
+    dim3 threads_per_block(128, 1, 1);
 
-    dim3 nb_blocks(ceil(float(height)/32),(float(width)/1),1);
-    dim3 threads_per_block(32, 1, 1);
-
-    mandel_iter<<<nb_blocks, threads_per_block>>>(iter_matrix_cu,
+    mandel_iter<<< nb_blocks, threads_per_block>>>(iter_matrix_cu,
                                                   //histogram_cu,
                                                   width, height,
                                                   n_iterations);
