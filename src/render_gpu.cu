@@ -54,18 +54,17 @@ void GPURenderer::render_gpu(uint8_t* buffer,
                              std::ptrdiff_t stride,
                              int n_iterations)
 {
-    //int *histogram_cu;
     int *histogram = new int[n_iterations];
     for (int i = 0; i < n_iterations; ++i)
         histogram[i] = 0;
+    //int *histogram_cu;
 
     int N = width * height;
-    int *iter_matrix_cu;
     int *iter_matrix = new int[N];
+    int *iter_matrix_cu;
+    cudaMalloc(&iter_matrix_cu, N*sizeof(int));
 
     float total = 0.f;
-
-    cudaMalloc(&iter_matrix_cu, N*sizeof(int));
 
     dim3 nb_blocks(ceil(float(height)/32),(float(width)/1),1);
     dim3 threads_per_block(32, 1, 1);
@@ -75,7 +74,7 @@ void GPURenderer::render_gpu(uint8_t* buffer,
                                                   width, height,
                                                   n_iterations);
 
-    cudaMemcpy(iter_matrix_cu, iter_matrix, N*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(iter_matrix, iter_matrix_cu, N*sizeof(int), cudaMemcpyDeviceToHost);
 
     for (int i = 0; i < N; i++)
     {
