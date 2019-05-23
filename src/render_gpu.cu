@@ -15,8 +15,10 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
 
     int idx = width * Y + X;
 
-    float x0 = ((float)X / width) * (3.5) - 2.5;
-    float y0 = ((float)Y /height) * (2) - 1;
+    iter_matrix[idx] = 1;
+    return;
+    float x0 = ((3.5 / ((float)width - 1.0)) * (float)X) - 2.5; //((float)X / width) * (3.5) - 2.5;
+    float y0 = ((2.0 / ((float)height - 1.0)) * (float)Y) - 1.0; //((float)Y /height) * (2) - 1;
 
     float x = 0.0f;
     float y = 0.0f;
@@ -37,11 +39,13 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
           x = xtemp;
           iter++;
         }
+        /*
         if (iter != n_iterations)
         {
-            //histogram[iter] += 2;
-            //total += 2;
+            histogram[iter] += 2;
+            total += 2;
         }
+        */
     }
 
     iter_matrix[idx] = iter;
@@ -84,12 +88,15 @@ void GPURenderer::render_gpu(uint8_t* buffer,
             int iter = iter_matrix[Py * width + Px];
             if (iter != n_iterations)
             {
+                std::cout << iter << std::endl;
                 histogram[iter] += 2;
                 total += 2;
             }
         }
     }
 
+    //for (int i = 0; i < n_iterations; ++i)
+    //    std::cout << histogram[i] << std::endl;
 
     rgba8_t *hue = new rgba8_t[n_iterations + 1];
     for (int i = 0; i < n_iterations + 1; ++i)
