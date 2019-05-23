@@ -22,12 +22,26 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
     float y = 0.0f;
 
     int iter = 0;
-    float xtemp;
-    while((x *x + y *y <= 4.0f) && (iter < n_iterations)){
-      xtemp = x * x - y * y + x0;
-      y = 2.0f * x * y + y0;
-      x = xtemp;
-      iter++;
+    float tmp1 = (x0 - 0.25f) * (x0 - 0.25f);
+    float tmp2 = y0 * y0;
+    float q = tmp1 + tmp2;
+    if (q * (q + (x0 - 0.25f)) < (0.25f * tmp2))
+        iter = n_iterations;
+    else
+    {
+        float xtemp;
+        while(x *x + y *y < 4 && iter < n_iterations)
+        {
+          xtemp = x * x - y * y + x0;
+          y = 2.0f * x * y + y0;
+          x = xtemp;
+          iter++;
+        }
+        if (iter != n_iterations)
+        {
+            //histogram[iter] += 2;
+            //total += 2;
+        }
     }
 
     iter_matrix[idx] = iter;
@@ -53,8 +67,8 @@ void GPURenderer::render_gpu(uint8_t* buffer,
 
     cudaMalloc(&iter_matrix_cu, N*sizeof(int));
 
-   dim3 nb_blocks(ceil(float(height)/32),(float(width)/1),1);
-   dim3 threads_per_block(32, 1, 1);
+    dim3 nb_blocks(ceil(float(height)/32),(float(width)/1),1);
+    dim3 threads_per_block(32, 1, 1);
 
     mandel_iter<<<nb_blocks, threads_per_block>>>(iter_matrix_cu,
                                                   //histogram_cu,
