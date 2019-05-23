@@ -75,14 +75,21 @@ void GPURenderer::render_gpu(uint8_t* buffer,
                                                   n_iterations);
 
     cudaMemcpy(iter_matrix, iter_matrix_cu, N*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(iter_matrix_cu);
 
-    for (int i = 0; i < N; i++)
+    for (int Py = 0; Py < height / 2; ++Py)
     {
-        if (iter_matrix[i] != 0)
-            std::cout << iter_matrix[i] << std::endl;
+        for (int Px = 0; Px < width; ++Px)
+        {
+            int iter = iter_matrix[Py * width + Px];
+            if (iter != n_iterations)
+            {
+                histogram[iter] += 2;
+                total += 2;
+            }
+        }
     }
 
-    cudaFree(iter_matrix_cu);
 
     rgba8_t *hue = new rgba8_t[n_iterations + 1];
     for (int i = 0; i < n_iterations + 1; ++i)
