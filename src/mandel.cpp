@@ -7,7 +7,7 @@
 #include "render_cpu.hpp"
 
 
-void write_png(const std::byte* buffer,
+void write_png(const uint8_t* buffer,
                int width,
                int height,
                int stride,
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
   // Create buffer
   constexpr int kRGBASize = 4;
   int stride = width * kRGBASize;
-  auto buffer = std::make_unique<std::byte[]>(height * stride);
+  auto buffer = std::make_unique<uint8_t[]>(height * stride);
 
   // Rendering
 

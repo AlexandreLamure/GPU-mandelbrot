@@ -10,7 +10,7 @@ constexpr int height = 3200;
 void BM_Rendering_cpu(benchmark::State& st)
 {
     int stride = width * kRGBASize;
-    std::vector<std::byte> data(height * stride);
+    std::vector<uint8_t> data(height * stride);
 
     for (auto _ : st)
         render_cpu(data.data(), width, height, stride);
@@ -21,7 +21,7 @@ void BM_Rendering_cpu(benchmark::State& st)
 void BM_Rendering_gpu(benchmark::State& st)
 {
     int stride = width * kRGBASize;
-    std::vector<std::byte> data(height * stride);
+    std::vector<uint8_t> data(height * stride);
 
     GPURenderer rd;
     for (auto _ : st)

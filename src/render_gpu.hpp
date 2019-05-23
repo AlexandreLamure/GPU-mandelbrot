@@ -5,17 +5,16 @@
 #ifndef GPGPU_RENDER_GPU_HPP
 #define GPGPU_RENDER_GPU_HPP
 
-#endif //GPGPU_RENDER_GPU_HPP
-
-#include <cstddef>
-
 
 class GPURenderer {
 public:
     GPURenderer(){};
-    void render_gpu(std::byte* buffer,
+    void render_gpu(uint8_t* buffer,
                     int width, int height,
                     std::ptrdiff_t stride,
                     int n_iterations = 100);
 
 };
+
+
+#endif //GPGPU_RENDER_GPU_HPP
