@@ -50,9 +50,9 @@ set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++17" )
 
 include_directories(lib/include)
 
-add_library(renderer src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cpp)  # version etudiant
-target_link_libraries(renderer)
+add_library(renderer src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cu)  # version etudiant
 set_target_properties(renderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+target_link_libraries(renderer)
 target_compile_definitions(renderer PRIVATE KERNEL_SOURCE_FILE=${CMAKE_SOURCE_DIR}/src/mandel_etu.cl)  # version etudiant
 
 add_executable(mandel src/mandel.cpp)
