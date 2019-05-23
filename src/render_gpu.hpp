@@ -11,14 +11,11 @@
 
 
 class GPURenderer {
-
-
-
-
 public:
-
     GPURenderer(){};
-
-    void execute(std::byte* buffer, int width, int height, std::ptrdiff_t stride, int n_iterations = 100);
+    void render_gpu(std::byte* buffer,
+                    int width, int height,
+                    std::ptrdiff_t stride,
+                    int n_iterations = 100);
 
 };

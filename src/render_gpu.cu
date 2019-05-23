@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <iostream>
 
+#include "render_gpu.hpp"
+
 struct rgba8_t {
   std::uint8_t r;
   std::uint8_t g;
@@ -66,11 +68,11 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
 }
 
 
-void render_gpu(std::byte* buffer,
-                int width,
-                int height,
-                std::ptrdiff_t stride,
-                int n_iterations)
+void GPURenderer::render_gpu(std::byte* buffer,
+                             int width,
+                             int height,
+                             std::ptrdiff_t stride,
+                             int n_iterations)
 {
     int *histogram_cu;
     int *histogram = new int[n_iterations];
