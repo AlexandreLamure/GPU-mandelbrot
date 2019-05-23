@@ -9,19 +9,14 @@
 __global__
 void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
 {
-    int X = blockIdx.y * blockDim.y + threadIdx.y;
-    int Y = blockIdx.x * blockDim.x + threadIdx.x;
+    int X = blockIdx.x * blockDim.x + threadIdx.x;
+    int Y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (Y >= width or Y >= height)
-      return;
-
-    if (X >= width or X >= height)
+    if (X >= width or Y >= height)
       return;
 
     int idx = width * Y + X;
 
-    iter_matrix[idx] = 1;
-    return;
     float x0 = ((3.5 / ((float)width - 1.0)) * (float)X) - 2.5; //((float)X / width) * (3.5) - 2.5;
     float y0 = ((2.0 / ((float)height - 1.0)) * (float)Y) - 1.0; //((float)Y /height) * (2) - 1;
 
@@ -74,7 +69,7 @@ void GPURenderer::render_gpu(uint8_t* buffer,
     cudaMalloc(&iter_matrix_cu, N*sizeof(int));
 
     float total = 0.f;
-    dim3 nb_blocks(ceil(float(height)/128),(float(width)/1),1);
+    dim3 nb_blocks(width/128 + (width % 128 != 0), height/2,1);
     dim3 threads_per_block(128, 1, 1);
 
     mandel_iter<<< nb_blocks, threads_per_block>>>(iter_matrix_cu,
@@ -107,11 +102,12 @@ void GPURenderer::render_gpu(uint8_t* buffer,
         hue[i] = rgba8_t{0, 0, 0, 255};
     float tmp = (float)histogram[0] / total;
     hue[0] = heat_lut(tmp);
-    for (int i = 1; i < n_iterations; ++i)
+    for (int i = 1; i < n_iterations - 1; ++i)
     {
         tmp = tmp + ((float)histogram[i] / total);
         hue[i] = heat_lut(tmp);
     }
+    hue[n_iterations - 1] = rgba8_t{ 0, 0, 0, 255};
  
     auto buffer_down = buffer + stride * (height - 1);
     for (int Py = 0; Py < height / 2; ++Py)
