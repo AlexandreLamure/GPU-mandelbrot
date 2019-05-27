@@ -1,4 +1,5 @@
 #include "render_cpu.hpp"
+#include "render_mt.hpp"
 #include "render_gpu.hpp"
 #include <vector>
 #include <benchmark/benchmark.h>
@@ -18,6 +19,17 @@ void BM_Rendering_cpu(benchmark::State& st)
     st.counters["fps"] = benchmark::Counter(st.iterations(), benchmark::Counter::kIsRate);
 }
 
+void BM_Rendering_mt(benchmark::State& st)
+{
+    int stride = width * kRGBASize;
+    std::vector<uint8_t> data(height * stride);
+
+    for (auto _ : st)
+        render_mt(data.data(), width, height, stride);
+
+    st.counters["fps"] = benchmark::Counter(st.iterations(), benchmark::Counter::kIsRate);
+}
+
 void BM_Rendering_gpu(benchmark::State& st)
 {
     int stride = width * kRGBASize;
@@ -31,6 +43,10 @@ void BM_Rendering_gpu(benchmark::State& st)
 }
 
 BENCHMARK(BM_Rendering_cpu)
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
+
+BENCHMARK(BM_Rendering_mt)
 ->Unit(benchmark::kMillisecond)
 ->UseRealTime();
 
