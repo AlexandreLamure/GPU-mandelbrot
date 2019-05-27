@@ -1,17 +1,15 @@
-#include "render_cpu.hpp"
+#include "render_mt.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cassert>
-#include <tbb/parallel_for.h>
-#include <tbb/blocked_range.h>
-#include <tbb/tbb.h>
+#include <omp.h>
 #include <mutex>
 
 #include "heat_lut.hpp"
 
-void render_mt(std::byte* buffer,
+void render_mt(uint8_t* buffer,
                int width,
                int height,
                std::ptrdiff_t stride,
@@ -32,10 +30,8 @@ void render_mt(std::byte* buffer,
         x0[i] = ((3.5 / ((float)width - 1.0)) * (float)i) - 2.5; //x0 = scaled x coordinate of pixel (scaled to lie in the Mandelbrot X scale (-2.5, 1))
 
     float total = 0.0;
-    //#pragma omp parallel for //private(x0, y0, histogram, iter_matrix)
-    tbb::parallel_for(tbb::blocked_range<std::size_t>(0, height / 2),
-                    [&](const tbb::blocked_range<std::size_t> &range) {
-    for (unsigned int Py = range.begin(); Py < range.end(); ++Py)
+    #pragma omp parallel for //private(x0, y0, histogram, iter_matrix)
+    for (int Py = 0; Py < height / 2; ++Py)
     {
         int histogram_copy[n_iterations];
         for (int i = 0; i < n_iterations; ++i)
@@ -73,12 +69,11 @@ void render_mt(std::byte* buffer,
         }
         m.unlock();
     }
-    });
 
-    rgb8_t *hue = new rgb8_t[n_iterations];
+    rgba8_t *hue = new rgba8_t[n_iterations];
 
     for (int i = 0; i < n_iterations; ++i)
-        hue[i] = rgb8_t{0, 0, 0};
+        hue[i] = rgba8_t{0, 0, 0, 255};
     float tmp = (float)histogram[0] / total;
     hue[0] = heat_lut(tmp);
     for (int i = 1; i < n_iterations; ++i)
@@ -89,14 +84,13 @@ void render_mt(std::byte* buffer,
 
     auto buffer_down = buffer + stride * (height - 1);
 
-    tbb::parallel_for(tbb::blocked_range<std::size_t>(0, height / 2),
-                    [&](const tbb::blocked_range<std::size_t> &range) {
-    for (unsigned int Py = range.begin(); Py < range.end(); ++Py)
+    #pragma omp parallel for
+    for (int Py = 0; Py < height / 2; ++Py)
     {
         auto buffer_top_copy = buffer + stride * Py;
         auto buffer_down_copy = buffer_down - stride * Py;
-        rgb8_t* lineptr_top = reinterpret_cast<rgb8_t*>(buffer_top_copy);
-        rgb8_t* lineptr_bottom = reinterpret_cast<rgb8_t*>(buffer_down_copy);
+        rgba8_t* lineptr_top = reinterpret_cast<rgba8_t*>(buffer_top_copy);
+        rgba8_t* lineptr_bottom = reinterpret_cast<rgba8_t*>(buffer_down_copy);
         for (int Px = 0; Px < width; ++Px)
         {
             if (iter_matrix[Py * width + Px] != n_iterations)
@@ -106,7 +100,6 @@ void render_mt(std::byte* buffer,
             }
         }
     }
-    });
 
     delete[] iter_matrix;
     delete[] histogram;
