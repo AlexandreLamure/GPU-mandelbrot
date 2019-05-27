@@ -87,7 +87,6 @@ void GPURenderer::render_gpu(uint8_t* buffer,
             int iter = iter_matrix[Py * width + Px];
             if (iter != n_iterations)
             {
-                std::cout << iter << std::endl;
                 histogram[iter] += 2;
                 total += 2;
             }
