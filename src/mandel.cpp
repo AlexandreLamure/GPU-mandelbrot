@@ -5,6 +5,7 @@
 
 #include <CLI/CLI.hpp>
 #include "render_cpu.hpp"
+#include "render_mt.hpp"
 #include "render_gpu.hpp"
 
 void write_png(const uint8_t* buffer,
@@ -64,7 +65,7 @@ int main(int argc, char** argv)
   app.add_option("-o", filename, "Output image");
   app.add_option("width", width, "width of the output image");
   app.add_option("height", height, "height of the output image");
-  app.add_set("-m", mode, {"GPU", "CPU"}, "Either 'GPU' or 'CPU'");
+  app.add_set("-m", mode, {"GPU", "CPU", "MT"}, "Either 'GPU', 'CPU' or 'MT'");
 
       CLI11_PARSE(app, argc, argv);
 
@@ -79,6 +80,10 @@ int main(int argc, char** argv)
   {
     render_cpu(buffer.get(), width, height, stride);
   }
+  else if (mode == "MT")
+  {
+    render_mt(buffer.get(), width, height, stride);
+  }
   else if (mode == "GPU")
   {
     GPURenderer r;
@@ -89,4 +94,3 @@ int main(int argc, char** argv)
   write_png(buffer.get(), width, height, stride, filename.c_str());
   return 0;
 }
-

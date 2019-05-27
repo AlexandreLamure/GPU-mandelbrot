@@ -40,9 +40,10 @@ endif()
 
 find_package(PNG REQUIRED)
 find_package(CUDA REQUIRED)
+find_package(OpenMP REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-W -Wall -g")
+set(CMAKE_CXX_FLAGS "-W -Wall -fopenmp")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -s")
 
 set(CUDACXX "nvcc")
@@ -52,7 +53,10 @@ include_directories(${CUDA_INCLUDE_DIRS})
 
 include_directories(lib/include)
 
-add_library(renderer src/heat_lut.hpp src/heat_lut.cpp src/render_cpu.hpp src/render_cpu.cpp src/render_gpu.hpp src/render_gpu.cu)
+add_library(renderer src/heat_lut.hpp src/heat_lut.cpp
+                     src/render_cpu.hpp src/render_cpu.cpp
+                     src/render_mt.hpp src/render_mt.cpp
+                     src/render_gpu.hpp src/render_gpu.cu)
 set_target_properties(renderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(renderer)
 
