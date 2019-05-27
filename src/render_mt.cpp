@@ -98,6 +98,11 @@ void render_mt(uint8_t* buffer,
                 lineptr_top[Px] = hue[iter_matrix[Py * width + Px]];
                 lineptr_bottom[Px] = hue[iter_matrix[Py * width + Px]];
             }
+            else
+            {
+                lineptr_top[Px] = rgba8_t{0, 0, 0, 255};
+                lineptr_bottom[Px] = rgba8_t{0, 0, 0, 255};
+            }
         }
     }
 
