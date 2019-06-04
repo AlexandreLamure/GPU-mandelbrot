@@ -6,6 +6,9 @@
 #include "heat_lut.hpp"
 
 
+constexpr static auto NB_THREADS = 128;
+
+
 __global__
 void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
 {
@@ -70,19 +73,20 @@ void GPURenderer::render_gpu(uint8_t* buffer,
         histogram[i] = 0;
 
     int N = width * height;
-    int *iter_matrix = new int[N];
+    int N2 = width * (height / 2 + 2);
+    int *iter_matrix = new int[N2];
     int *iter_matrix_cu;
-    cudaMalloc(&iter_matrix_cu, N*sizeof(int));
+    cudaMalloc(&iter_matrix_cu, N2*sizeof(int));
 
     float total = 0.f;
-    dim3 nb_blocks(width/128 + (width % 128 != 0), height/2,1);
-    dim3 threads_per_block(128, 1, 1);
+    dim3 nb_blocks(width/NB_THREADS + (width % NB_THREADS != 0), height/2+1,1);
+    dim3 threads_per_block(NB_THREADS, 1, 1);
 
     mandel_iter<<< nb_blocks, threads_per_block>>>(iter_matrix_cu,
-                                                  width, height,
-                                                  n_iterations);
+                                                   width, height,
+                                                   n_iterations);
 
-    cudaMemcpy(iter_matrix, iter_matrix_cu, N*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(iter_matrix, iter_matrix_cu, N2*sizeof(int), cudaMemcpyDeviceToHost);
 
     for (int Py = 0; Py < height / 2; ++Py)
     {
@@ -118,8 +122,8 @@ void GPURenderer::render_gpu(uint8_t* buffer,
     cudaMalloc(&buffer_cu, N*sizeof(rgba8_t));
     rgba8_t *buffer_down_cu = buffer_cu + width * (height - 1);
 
-    nb_blocks = dim3(width/128 + (width % 128 != 0), height/2,1);
-    threads_per_block = dim3(128, 1, 1);
+    nb_blocks = dim3(width/NB_THREADS + (width % NB_THREADS != 0), height/2,1);
+    threads_per_block = dim3(NB_THREADS, 1, 1);
 
     buffer_fill<<< nb_blocks, threads_per_block>>>(hue_cu, iter_matrix_cu,
                                                    width, height,
