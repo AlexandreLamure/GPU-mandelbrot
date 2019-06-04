@@ -44,6 +44,20 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
     iter_matrix[idx] = iter;
 }
 
+__global__
+void buffer_fill(rgba8_t *hue, int *iter_matrix, int width, int height,
+                 rgba8_t* buffer, rgba8_t* buffer_down)
+{
+    int X = blockIdx.x * blockDim.x + threadIdx.x;
+    int Y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    auto offset = width * Y;
+    auto pixel_top = buffer + offset;
+    auto pixel_down = buffer_down - offset;
+
+    pixel_top[X] = hue[iter_matrix[Y * width + X]];
+    pixel_down[X] = hue[iter_matrix[Y * width + X]];
+}
 
 void GPURenderer::render_gpu(uint8_t* buffer,
                              int width,
@@ -54,7 +68,6 @@ void GPURenderer::render_gpu(uint8_t* buffer,
     int *histogram = new int[n_iterations];
     for (int i = 0; i < n_iterations; ++i)
         histogram[i] = 0;
-    //int *histogram_cu;
 
     int N = width * height;
     int *iter_matrix = new int[N];
@@ -66,12 +79,10 @@ void GPURenderer::render_gpu(uint8_t* buffer,
     dim3 threads_per_block(128, 1, 1);
 
     mandel_iter<<< nb_blocks, threads_per_block>>>(iter_matrix_cu,
-                                                  //histogram_cu,
                                                   width, height,
                                                   n_iterations);
 
     cudaMemcpy(iter_matrix, iter_matrix_cu, N*sizeof(int), cudaMemcpyDeviceToHost);
-    cudaFree(iter_matrix_cu);
 
     for (int Py = 0; Py < height / 2; ++Py)
     {
@@ -96,21 +107,27 @@ void GPURenderer::render_gpu(uint8_t* buffer,
         tmp = tmp + ((float)histogram[i] / total);
         hue[i] = heat_lut(tmp);
     }
-    hue[n_iterations - 1] = rgba8_t{ 0, 0, 0, 255};
- 
-    auto buffer_down = buffer + stride * (height - 1);
-    for (int Py = 0; Py < height / 2; ++Py)
-    {
-        rgba8_t* lineptr_top = reinterpret_cast<rgba8_t*>(buffer);
-        rgba8_t* lineptr_bottom = reinterpret_cast<rgba8_t*>(buffer_down);
-        for (int Px = 0; Px < width; ++Px)
-        {
-            lineptr_top[Px] = hue[iter_matrix[Py * width + Px]];
-            lineptr_bottom[Px] = hue[iter_matrix[Py * width + Px]];
-        }
-        buffer += stride;
-        buffer_down -= stride;
-    }
+    hue[n_iterations - 1] = rgba8_t{0, 0, 0, 255};
+
+
+    rgba8_t *hue_cu;
+    cudaMalloc(&hue_cu, (n_iterations + 1) * sizeof(rgba8_t));
+    cudaMemcpy(hue_cu, hue, (n_iterations + 1) * sizeof(rgba8_t), cudaMemcpyHostToDevice);
+
+    rgba8_t *buffer_cu;
+    cudaMalloc(&buffer_cu, N*sizeof(rgba8_t));
+    rgba8_t *buffer_down_cu = buffer_cu + width * (height - 1);
+
+    nb_blocks = dim3(width/128 + (width % 128 != 0), height/2,1);
+    threads_per_block = dim3(128, 1, 1);
+
+    buffer_fill<<< nb_blocks, threads_per_block>>>(hue_cu, iter_matrix_cu,
+                                                   width, height,
+                                                   buffer_cu, buffer_down_cu);
+
+    cudaMemcpy(buffer, buffer_cu, N*sizeof(rgba8_t), cudaMemcpyDeviceToHost);
 
     delete[] iter_matrix;
+    cudaFree(iter_matrix_cu);
+    cudaFree(buffer_cu);
 }
