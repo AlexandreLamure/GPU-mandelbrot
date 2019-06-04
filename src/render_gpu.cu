@@ -39,13 +39,6 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
           x = xtemp;
           iter++;
         }
-        /*
-        if (iter != n_iterations)
-        {
-            histogram[iter] += 2;
-            total += 2;
-        }
-        */
     }
 
     iter_matrix[idx] = iter;
@@ -92,9 +85,6 @@ void GPURenderer::render_gpu(uint8_t* buffer,
             }
         }
     }
-
-    //for (int i = 0; i < n_iterations; ++i)
-    //    std::cout << histogram[i] << std::endl;
 
     rgba8_t *hue = new rgba8_t[n_iterations + 1];
     for (int i = 0; i < n_iterations + 1; ++i)
