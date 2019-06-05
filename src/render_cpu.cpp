@@ -65,11 +65,12 @@ void render_cpu(uint8_t* buffer,
     hue[i] = rgba8_t{0, 0, 0, 255};
   float tmp = (float)histogram[0] / total;
   hue[0] = heat_lut(tmp);
-  for (int i = 1; i < n_iterations; ++i)
+  for (int i = 1; i < n_iterations - 1; ++i)
   {
     tmp = tmp + ((float)histogram[i] / total);
     hue[i] = heat_lut(tmp);
   }
+  hue[n_iterations - 1] = rgba8_t{0, 0, 0, 255};
 
   auto buffer_down = buffer + stride * (height - 1);
   for (int Py = 0; Py < height / 2; ++Py)
