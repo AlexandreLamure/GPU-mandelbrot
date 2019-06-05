@@ -6,7 +6,8 @@
 #include "heat_lut.hpp"
 
 
-constexpr static auto NB_THREADS = 128;
+constexpr static auto NB_THREADS_W = 8;
+constexpr static auto NB_THREADS_H = 4;
 
 
 __global__
@@ -15,7 +16,7 @@ void mandel_iter(int *iter_matrix, int width, int height, int n_iterations)
     int X = blockIdx.x * blockDim.x + threadIdx.x;
     int Y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (X >= width or Y >= height)
+    if (X >= width or Y > height / 2)
       return;
 
     int idx = width * Y + X;
@@ -73,20 +74,22 @@ void GPURenderer::render_gpu(uint8_t* buffer,
         histogram[i] = 0;
 
     int N = width * height;
-    int N2 = width * (height / 2 + 2);
-    int *iter_matrix = new int[N2];
+    int w_block = width/NB_THREADS_W + (width % NB_THREADS_W != 0);
+    int h_block = height/2 / NB_THREADS_H + (height/2 % NB_THREADS_H != 0);
+    int N_cu = w_block * NB_THREADS_W * h_block * NB_THREADS_H;
+    int *iter_matrix = new int[N_cu];
     int *iter_matrix_cu;
-    cudaMalloc(&iter_matrix_cu, N2*sizeof(int));
+    cudaMalloc(&iter_matrix_cu, N_cu*sizeof(int));
 
     float total = 0.f;
-    dim3 nb_blocks(width/NB_THREADS + (width % NB_THREADS != 0), height/2+1,1);
-    dim3 threads_per_block(NB_THREADS, 1, 1);
+    dim3 nb_blocks(w_block, h_block,1);
+    dim3 threads_per_block(NB_THREADS_W, NB_THREADS_H, 1);
 
-    mandel_iter<<< nb_blocks, threads_per_block>>>(iter_matrix_cu,
-                                                   width, height,
-                                                   n_iterations);
+    mandel_iter<<<nb_blocks, threads_per_block>>>(iter_matrix_cu,
+                                                  width, height,
+                                                  n_iterations);
 
-    cudaMemcpy(iter_matrix, iter_matrix_cu, N2*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(iter_matrix, iter_matrix_cu, N_cu*sizeof(int), cudaMemcpyDeviceToHost);
 
     for (int Py = 0; Py < height / 2; ++Py)
     {
@@ -122,8 +125,8 @@ void GPURenderer::render_gpu(uint8_t* buffer,
     cudaMalloc(&buffer_cu, N*sizeof(rgba8_t));
     rgba8_t *buffer_down_cu = buffer_cu + width * (height - 1);
 
-    nb_blocks = dim3(width/NB_THREADS + (width % NB_THREADS != 0), height/2,1);
-    threads_per_block = dim3(NB_THREADS, 1, 1);
+    nb_blocks = dim3(w_block, h_block,1);
+    threads_per_block = dim3(NB_THREADS_W, NB_THREADS_H, 1);
 
     buffer_fill<<< nb_blocks, threads_per_block>>>(hue_cu, iter_matrix_cu,
                                                    width, height,
